@@ -7,43 +7,67 @@ difficulty = 5
 #previous block time
 prev_time = datetime.now()
 
-class block:
-    def __init__(self, seq_no=0, prev_hash=None, data=None):
-        self.seq_no = seq_no
-        self.prev_hash = prev_hash
-        self.data = data
-        self.timestamp = datetime.now()
+class block(object):
+    def __init__(self, index, transactions, timestamp, previous_hash, current_hash, difficulty, proof):
+        self.index = index
+        self.transactions = transactions
+        self.timestamp = timestamp
+        self.previous_hash = previous_hash
+        self.current_hash = current_hash
+        self.difficulty = difficulty
+        self.proof = proof
 
-
-    #finds the hash of a block
-    def nonce_hash(nonce, block):
+    def change_difficulty(self, delta):
         global difficulty
-        global prev_time
-        print(prev_time)
-        hash1 = hashlib.md5(str(block).encode('utf-8')).hexdigest()
-        for i in range(10000000):
-            hash2 = hashlib.md5((str(nonce) + str(hash1)).encode('utf-8')).hexdigest()
-            comp = ['0'] * difficulty
-            if (hash2[:difficulty] == ''.join(comp)):
-                print('hash2', hash2)
-                print('yes')
-                break
-            else:
-                nonce += 1
-        this_time = datetime.now()
-        #change difficulty
-        delta = this_time - prev_time
-        print(difficulty, delta.total_seconds())
         if (delta.total_seconds() < 5):
             difficulty += 1
         if (delta.total_seconds() > 15):
             difficulty -= 1
+
+    #get hash of current block using other data of block
+    def hash_block(self, transactions, index, timestamp, previous_hash, proof):
+        t = hashlib.sha256(transactions.encode('utf-8')).hexdigest()
+        i = hashlib.sha256(str(index).encode('utf-8')).hexdigest()
+        ts = hashlib.sha256(timestamp.strftime("%m%d%Y%H%M%S").encode('utf-8')).hexdigest()
+        ph = hashlib.sha256(previous_hash.encode('utf-8')).hexdigest()
+        p = hashlib.sha256(str(proof).encode('utf-8')).hexdigest()
+        final_hash = hashlib.sha256((t+i+ts+ph+p).encode('utf-8')).hexdigest()
+        return final_hash
+    
+    def hash_nonce(self):
+        return hashlib.sha256((str(self.proof)+self.current_hash).encode('utf-8')).hexdigest()
+
+    #finds the hash of a block
+    def mine(self):
+        difficulty = self.difficulty
+        prev_time = datetime.now()
+        hash1 = hashlib.sha256(str(block).encode('utf-8')).hexdigest()
+        while True:
+            hash2 = self.hash_nonce()
+            comp = ['0'] * difficulty
+            if (hash2[:difficulty] == ''.join(comp)):
+                print('hash2', hash2)
+                break
+            else:
+                self.proof += 1
+        this_time = datetime.now()
+        #change difficulty
+        delta = this_time - prev_time
+        print('difficulty:', difficulty, '  time took:', delta.total_seconds())
+        self.change_difficulty(delta)
         return hash2
 
 def main():
     #b tries to mine block
-    b = block(data='abdasfd')
-    hash = block.nonce_hash(1, b)
+    b = block(index=0, 
+                transactions='a', 
+                timestamp=datetime.now(), 
+                previous_hash="", 
+                current_hash=None, 
+                difficulty=5, 
+                proof=0)
+    b.current_hash = b.hash_block(b.transactions, b.index, b.timestamp, b.previous_hash, b.proof)
+    hash = b.mine()
 
 if __name__ == "__main__":
     main()
