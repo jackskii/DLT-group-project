@@ -2,11 +2,6 @@ import hashlib
 import json
 from datetime import datetime
 
-#init difficulty
-difficulty = 5
-#previous block time
-prev_time = datetime.now()
-
 class block(object):
     def __init__(self, index, transactions, timestamp, previous_hash, current_hash, difficulty, proof):
         self.index = index
@@ -18,15 +13,14 @@ class block(object):
         self.proof = proof
 
     def change_difficulty(self, delta):
-        global difficulty
         if (delta.total_seconds() < 5):
-            difficulty += 1
+            self.difficulty += 1
         if (delta.total_seconds() > 15):
-            difficulty -= 1
+            self.difficulty -= 1
 
     #get hash of current block using other data of block
     def hash_block(self, transactions, index, timestamp, previous_hash, proof):
-        t = hashlib.sha256(transactions.encode('utf-8')).hexdigest()
+        t = hashlib.sha256((''.join(transactions)).encode('utf-8')).hexdigest()
         i = hashlib.sha256(str(index).encode('utf-8')).hexdigest()
         ts = hashlib.sha256(timestamp.strftime("%m%d%Y%H%M%S").encode('utf-8')).hexdigest()
         ph = hashlib.sha256(previous_hash.encode('utf-8')).hexdigest()
@@ -71,7 +65,7 @@ def main():
     hash,dif = b.mine()
     #adds the mined block to chain
     b2 = block(index=b.index+1,
-                transactions='OwO',
+                transactions=['OwO','UwU','VwV'],
                 timestamp=datetime.now(),
                 previous_hash=hash,
                 current_hash=None,
