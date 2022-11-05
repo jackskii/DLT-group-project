@@ -34,10 +34,11 @@ class block(object):
         final_hash = hashlib.sha256((t+i+ts+ph+p).encode('utf-8')).hexdigest()
         return final_hash
     
+    #get hash of block+nonce
     def hash_nonce(self):
         return hashlib.sha256((str(self.proof)+self.current_hash).encode('utf-8')).hexdigest()
 
-    #finds the hash of a block
+    #mine a block
     def mine(self):
         difficulty = self.difficulty
         prev_time = datetime.now()
@@ -55,7 +56,7 @@ class block(object):
         delta = this_time - prev_time
         print('difficulty:', difficulty, '  time took:', delta.total_seconds())
         self.change_difficulty(delta)
-        return hash2
+        return hash2,difficulty
 
 def main():
     #b tries to mine block
@@ -67,7 +68,16 @@ def main():
                 difficulty=5, 
                 proof=0)
     b.current_hash = b.hash_block(b.transactions, b.index, b.timestamp, b.previous_hash, b.proof)
-    hash = b.mine()
+    hash,dif = b.mine()
+    #adds the mined block to chain
+    b2 = block(index=b.index+1,
+                transactions='OwO',
+                timestamp=datetime.now(),
+                previous_hash=hash,
+                current_hash=None,
+                difficulty = dif,
+                proof=0)
+    print(b2.previous_hash)
 
 if __name__ == "__main__":
     main()
