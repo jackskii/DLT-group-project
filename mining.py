@@ -20,8 +20,8 @@ class block:
         global difficulty
         global prev_time
         print(prev_time)
+        hash1 = hashlib.md5(str(block).encode('utf-8')).hexdigest()
         for i in range(10000000):
-            hash1 = hashlib.md5(str(block).encode('utf-8')).hexdigest()
             hash2 = hashlib.md5((str(nonce) + str(hash1)).encode('utf-8')).hexdigest()
             comp = ['0'] * difficulty
             if (hash2[:difficulty] == ''.join(comp)):
