@@ -3,6 +3,7 @@ import json
 from datetime import datetime
 import random
 
+DIFFICULTY_COUNT = 3
 
 class block(object):
     def __init__(self, index, transactions, timestamp, previous_hash, current_hash, difficulty, proof):
@@ -14,11 +15,24 @@ class block(object):
         self.difficulty = difficulty
         self.proof = proof
 
-    def change_difficulty(self, delta):
-        if (delta.total_seconds() < 15):
-            self.difficulty += 0
-        if (delta.total_seconds() > 15):
-            self.difficulty -= 0
+    #change difficulty if needed
+    def change_difficulty(self, chain):
+        #only change if more than 2*count is no the chain
+        if (len(chain) <= DIFFICULTY_COUNT*2):
+            return self.difficulty
+        #calculate average of last three by curr block's timestamp - prev timestamp
+        this_round_time = (self.timestamp - chain[-DIFFICULTY_COUNT].timestamp).total_seconds()
+        last_round_time = (chain[-DIFFICULTY_COUNT].timestamp - 
+                            chain[-(DIFFICULTY_COUNT*2)].timestamp).total_seconds()
+        #if this round time > twice last round time, reduce difficulty
+        if (this_round_time > last_round_time*2):
+            return self.difficulty-1
+        #if this round tiem < half last round time, increase difficulty
+        if (this_round_time < last_round_time/2):
+            return self.difficulty+1
+        return self.difficulty
+
+
 
     #get hash of current block using other data of block
     def hash_block(self):
@@ -45,10 +59,6 @@ class block(object):
             else:
                 self.proof += 1
         this_time = datetime.now()
-        #change difficulty
-        delta = this_time - start_time
-        #print('difficulty:', difficulty, '  time took:', delta.total_seconds())
-        self.change_difficulty(delta)
         return hash2
 
 #print block nicely
@@ -92,9 +102,10 @@ def main():
             previous_hash=chain[-1].current_hash, 
             current_hash='',
             difficulty=chain[-1].difficulty, 
-            proof=chain[-1].proof
+            proof=chain[-1].proof+1
         )
         temp.current_hash=temp.mine()
+        temp.difficulty = temp.change_difficulty(chain)
         print_block(temp)
         chain.append(temp)
 
